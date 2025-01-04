@@ -129,25 +129,11 @@ namespace DragonJellyFileUtils
         private static long GetDirectorySize(DirectoryInfo directoryInfo)
         {
             ArgumentNullException.ThrowIfNull(directoryInfo);
+            if (!directoryInfo.Exists) throw new DirectoryNotFoundException("Directory not found.");
 
-            if (!directoryInfo.Exists)
-            {
-                throw new DirectoryNotFoundException("Directory not found.");
-            }
-
-            long size = 0;
-
-            foreach (FileInfo file in directoryInfo.GetFiles())
-            {
-                size += file.Length;
-            }
-
-            foreach (DirectoryInfo dir in directoryInfo.GetDirectories())
-            {
-                size += GetDirectorySize(dir);
-            }
-
-            return size;
+            return directoryInfo.EnumerateFiles("*", SearchOption.AllDirectories)
+                                .AsParallel()
+                                .Sum(file => file.Length);
         }
 
         private static long GetFileSize(string filePath)
